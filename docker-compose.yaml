@@ -1,0 +1,33 @@
+# docker-compose.yml  – Kafka 3.8.0, KRaft mode, no ZooKeeper
+services:
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: kafka
+    ports:
+      - "9092:9092"            # broker for your apps
+      - "9093:9093"            # internal KRaft controller traffic
+    environment:
+      # --- KRaft essentials ---
+      KAFKA_CLUSTER_ID: "abcdefghijklmnopqrstuv"     # any 22‑char base64 string
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+
+      # --- Listeners ---
+      KAFKA_LISTENERS: >
+        PLAINTEXT://0.0.0.0:9092,
+        CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+
+      # --- Quality‑of‑life tweaks ---
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+    volumes:
+      - kafka-data:/var/lib/kafka   # keeps logs between restarts
+
+volumes:
+  kafka-data:
